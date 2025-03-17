@@ -4,7 +4,7 @@ import express, { Request, Response } from "express";
 import routes from "../src/routes/routes";
 
 const app = express();
-const port = 3000;
+const port = 3003;
 
 app.use(express.json());
 app.use("/api", routes);

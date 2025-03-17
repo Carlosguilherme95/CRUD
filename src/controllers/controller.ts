@@ -1,7 +1,5 @@
 import { Express, Request, Response } from "express";
 import { UserService } from "../service/service";
-import { AppDataSource } from "../database/data-source";
-import { User } from "../entity/entity";
 
 export class UserControllers {
   private userService: UserService;
@@ -19,8 +17,7 @@ export class UserControllers {
   }
   async userGet(req: Request, res: Response) {
     try {
-      const userRepository = AppDataSource.getRepository(User);
-      const userRepo = await userRepository.find();
+      const userRepo = this.userService.getAllUser;
       res.status(200).json(userRepo);
     } catch (Error) {
       res.status(404).send("não encontramos usuários");
@@ -28,50 +25,39 @@ export class UserControllers {
   }
   async userGetOne(req: Request, res: Response) {
     const { id_user } = req.params;
+    const idUserNum = parseInt(id_user);
     try {
-      const userRepository = AppDataSource.getRepository(User);
-      const userRepo = await userRepository.findOne({
-        where: {
-          id_user: Number(id_user),
-        },
-      });
-      res.status(200).json(userRepo);
-    } catch {
-      res.status(404).send("usuário não encontrado");
+      const findUser = await this.userService.getOneUser(idUserNum);
+      if (!id_user) {
+        res.status(404).send("usuário não encontrado");
+      }
+      res.status(200).json(findUser);
+    } catch (Error) {
+      res.status(500).send("usuário não encontrado");
     }
   }
   async userPut(req: Request, res: Response) {
     const { id_user } = req.params;
-
+    const idUserNumber = parseInt(id_user);
+    const { name, email, user, password } = req.body;
     try {
-      const userRepository = AppDataSource.getRepository(User);
-      const userRepo = await userRepository.findOne({
-        where: {
-          id_user: Number(id_user),
-        },
+      const putUser = await this.userService.modifyUser(idUserNumber, {
+        name,
+        email,
+        user,
+        password,
       });
-      if (userRepo) {
-        userRepo.name = req.body.name;
-        userRepo.email = req.body.email;
-        userRepo.user = req.body.user;
-        userRepo.password = req.body.password;
-        await userRepository.save(userRepo);
-      }
-      res.status(200).send("usuário modificado");
+      res.status(200).send("usuário modificado com sucesso");
     } catch (Error) {
-      res.status(404).send("o usuário não foi encontrado");
+      res.status(404).send("não foi possível modificar o usuário");
     }
   }
+
   async userDelete(req: Request, res: Response) {
     const { id_user } = req.params;
+    const idUserNumber = parseInt(id_user);
     try {
-      const userRepository = AppDataSource.getRepository(User);
-      const userRepo = await userRepository.findOne({
-        where: {
-          id_user: Number(id_user),
-        },
-      });
-      await userRepository.delete(id_user);
+      const deleteUser = await this.userService.deleteUser(idUserNumber);
       res.status(200).send("usuário deletado com sucesso");
     } catch (Error) {
       res.status(404).send("não foi possível deletar o usuário");
