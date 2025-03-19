@@ -1,6 +1,9 @@
 import { AppDataSource } from "../database/data-source";
 import { User } from "../entity/entity";
 
+import jwt from "jsonwebtoken";
+export const SECRET: string = process.env.JWT_SECRET || "JWT";
+
 export async function modifyUser(
   id_user: number,
   updateData: { name: string; email: string; user: string; password: string }
@@ -60,4 +63,27 @@ export async function createUser(
   newUser.user = user;
   const userRepository = AppDataSource.getRepository(User);
   await userRepository.save(newUser);
+}
+export async function userLogin(user: string, password: string) {
+  const userRepository = AppDataSource.getRepository(User);
+  const userRepo = await userRepository.findOne({
+    where: {
+      user: user,
+      password: password,
+    },
+  });
+  if (!userRepo) {
+    throw new Error("usuário ou senha não encontrado");
+  }
+  const token = jwt.sign(
+    {
+      userId: userRepo.id_user,
+      user: userRepo.user,
+    },
+    SECRET,
+    { expiresIn: "1h" }
+  );
+  return {
+    token,
+  };
 }

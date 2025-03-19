@@ -5,6 +5,7 @@ import {
   getOneUser,
   modifyUser,
   deleteUser,
+  userLogin,
 } from "../service/service";
 
 export class UserControllers {
@@ -65,6 +66,15 @@ export class UserControllers {
       res.status(200).send("usuário deletado com sucesso");
     } catch (Error) {
       res.status(404).send("não foi possível deletar o usuário");
+    }
+  }
+  async userLogin(req: Request, res: Response) {
+    const { user, password } = req.body;
+    try {
+      const login = await userLogin(user, password);
+      res.json(login); // nessa situação não será possível usar o status junto com o res.json. derruba a api
+    } catch (Error) {
+      res.status(404).send("não foi possível fazer login");
     }
   }
 }
