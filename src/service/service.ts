@@ -6,27 +6,6 @@ import { createDatabaseConnection } from "../database";
 import jwt from "jsonwebtoken";
 export const SECRET: string = process.env.JWT_SECRET || "JWT";
 
-export async function modifyUser(
-  id_user: number,
-  updateData: { name: string; email: string; user: string; password: string }
-) {
-  const userRepository = AppDataSource.getRepository(User);
-  const userRepo = await userRepository.findOne({
-    where: {
-      id_user: Number(id_user),
-    },
-  });
-  if (!userRepo) {
-    throw new Error("o usuário que você quer modificar não foi encontrado");
-  } else {
-    userRepo.name = updateData.name;
-    userRepo.email = updateData.email;
-    userRepo.user = updateData.user;
-    userRepo.password = updateData.password;
-    await userRepository.save(userRepo);
-  }
-}
-
 export async function userLogin(user: string, password: string) {
   const userRepository = AppDataSource.getRepository(User);
   const userRepo = await userRepository.findOne({
