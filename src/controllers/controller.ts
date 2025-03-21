@@ -1,44 +1,42 @@
 import { Express, Request, Response } from "express";
-import {
-  getAllUser,
-  createUser,
-  getOneUser,
-  modifyUser,
-  deleteUser,
-  userLogin,
-} from "../service/service";
+import { modifyUser, userLogin, createUserService } from "../service/service";
 
 export class UserControllers {
   async userPost(req: Request, res: Response) {
     const { nome, email, password, user } = req.body;
     try {
-      await createUser(nome, email, password, user);
+      const createUser = await createUserService();
+      const userCreated = await createUser.createUser(
+        nome,
+        email,
+        password,
+        user
+      );
       res.status(201).send("usuário criado");
     } catch (Error) {
       res.status(404).send("não foi possível criar o usuário");
     }
   }
-  async userGet(req: Request, res: Response) {
+
+  async getAllUser(req: Request, res: Response) {
     try {
-      const userRepo = await getAllUser();
-      console.log(userRepo);
-      res.status(200).json(userRepo);
-    } catch (error) {
+      const getAllUser = await createUserService();
+      const allUser = await getAllUser.findAll();
+      res.status(200).json(allUser);
+    } catch (e) {
       res.status(404).send("não encontramos usuários");
     }
   }
 
   async userGetOne(req: Request, res: Response) {
     const { id_user } = req.params;
+    const idNumber = parseInt(id_user);
     try {
-      await getOneUser(id_user);
-      const findUser = await getOneUser(id_user);
-      if (!id_user) {
-        res.status(404).send("usuário não encontrado");
-      }
-      res.status(200).json(findUser);
-    } catch (Error) {
-      res.status(500).send("usuário não encontrado");
+      const findOneUser = await createUserService();
+      const oneUser = await findOneUser.FindOne(idNumber);
+      res.status(200).json(oneUser);
+    } catch (e) {
+      res.status(404).send("usuário não encontrado");
     }
   }
   async userPut(req: Request, res: Response) {
@@ -46,7 +44,8 @@ export class UserControllers {
     const idUserNumber = parseInt(id_user);
     const { name, email, user, password } = req.body;
     try {
-      await modifyUser(idUserNumber, {
+      const finduser = await createUserService();
+      const usermodify = await finduser.modifyUser(idUserNumber, {
         name,
         email,
         user,
@@ -62,7 +61,8 @@ export class UserControllers {
     const { id_user } = req.params;
     const idUserNumber = parseInt(id_user);
     try {
-      await deleteUser(idUserNumber);
+      const user = await createUserService();
+      const delUser = await user.deleteUser(idUserNumber);
       res.status(200).send("usuário deletado com sucesso");
     } catch (Error) {
       res.status(404).send("não foi possível deletar o usuário");

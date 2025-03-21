@@ -1,5 +1,7 @@
+import { Repository } from "typeorm";
 import { AppDataSource } from "../database/data-source";
 import { User } from "../entity/entity";
+import { createDatabaseConnection } from "../database";
 
 import jwt from "jsonwebtoken";
 export const SECRET: string = process.env.JWT_SECRET || "JWT";
@@ -24,46 +26,7 @@ export async function modifyUser(
     await userRepository.save(userRepo);
   }
 }
-export async function deleteUser(id_user: number) {
-  const userRepository = AppDataSource.getRepository(User);
-  const userRepo = await userRepository.findOne({
-    where: { id_user: Number(id_user) },
-  });
-  await userRepository.delete(id_user);
-}
 
-export async function getAllUser() {
-  try {
-    const userRepository = AppDataSource.getRepository(User);
-    const userRepo = userRepository.find();
-    return userRepo;
-  } catch (error) {
-    console.error("Erro ao buscar usuários:", error);
-    throw error;
-  }
-}
-export async function getOneUser(id_user: string) {
-  const userRepository = AppDataSource.getRepository(User);
-  const userRepo = await userRepository.findOne({
-    where: { id_user: Number(id_user) },
-  });
-  return userRepo;
-}
-
-export async function createUser(
-  nome: string,
-  email: string,
-  password: string,
-  user: string
-) {
-  const newUser = new User();
-  newUser.name = nome;
-  newUser.email = email;
-  newUser.password = password;
-  newUser.user = user;
-  const userRepository = AppDataSource.getRepository(User);
-  await userRepository.save(newUser);
-}
 export async function userLogin(user: string, password: string) {
   const userRepository = AppDataSource.getRepository(User);
   const userRepo = await userRepository.findOne({
@@ -86,4 +49,62 @@ export async function userLogin(user: string, password: string) {
   return {
     token,
   };
+}
+
+export class UserService {
+  constructor(private userRepository: Repository<User>) {
+    this.userRepository = userRepository;
+  }
+
+  async findAll() {
+    return this.userRepository.find();
+  }
+  async FindOne(id_user: number): Promise<User | null> {
+    const user = this.userRepository.findOne({
+      where: { id_user },
+    });
+    return user;
+  }
+  async createUser(
+    nome: string,
+    email: string,
+    password: string,
+    user: string
+  ) {
+    const newUser = new User();
+    newUser.name = nome;
+    newUser.email = email;
+    newUser.password = password;
+    newUser.user = user;
+    const addUser = this.userRepository.save(newUser);
+    return addUser;
+  }
+  async deleteUser(id_user: number) {
+    const user = this.userRepository.findOne({
+      where: { id_user },
+    });
+    await this.userRepository.delete(id_user);
+  }
+  async modifyUser(
+    id_user: number,
+    updateData: { name: string; email: string; user: string; password: string }
+  ) {
+    const user = await this.userRepository.findOne({
+      where: { id_user },
+    });
+    if (!user) {
+      throw new Error("usuário não encontrado na base de dados");
+    }
+    user.name = updateData.name;
+    user.email = updateData.email;
+    user.user = updateData.user;
+    user.password = updateData.password;
+    console.log(`usuário modificado com sucesso ${user}`);
+    return await this.userRepository.save(user);
+  }
+}
+
+export async function createUserService(): Promise<UserService> {
+  const { userRepository } = await createDatabaseConnection();
+  return new UserService(userRepository);
 }

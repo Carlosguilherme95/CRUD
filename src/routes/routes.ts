@@ -7,7 +7,7 @@ const router = express.Router();
 const userController = new UserControllers();
 
 router.post("/createuser", userController.userPost);
-router.get("/createuser", verifyJwt, userController.userGet);
+router.get("/createuser", userController.getAllUser);
 router.get("/createuser/:id_user", userController.userGetOne);
 router.put("/createuser/:id_user", userController.userPut);
 router.delete("/createuser/:id_user", userController.userDelete);
